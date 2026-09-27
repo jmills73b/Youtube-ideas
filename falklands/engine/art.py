@@ -192,8 +192,9 @@ def _puff(seed, size=160):
 
 
 def smoke(ctx, x, y, t, seed=0, rate=6.0, life=9.0, rise=38.0, spread=1.0, size=30.0,
-          color=(0.12, 0.11, 0.11), alpha=0.55, wind=18.0, start=0.0, grow=4.0):
-    """Billowing smoke column from (x,y); deterministic in t. Drawn with textured puffs."""
+          color=(0.12, 0.11, 0.11), alpha=0.55, wind=18.0, start=0.0, grow=4.0, stop=None):
+    """Billowing smoke column from (x,y); deterministic in t. Drawn with textured puffs.
+    stop: optional time after which no new puffs are emitted."""
     if t < start:
         return
     n = int((t - start) * rate) + 1
@@ -201,7 +202,7 @@ def smoke(ctx, x, y, t, seed=0, rate=6.0, life=9.0, rise=38.0, spread=1.0, size=
     for i in range(first, n):
         b = start + i / rate
         age = t - b
-        if age < 0 or age > life:
+        if age < 0 or age > life or (stop is not None and b > stop):
             continue
         u = age / life
         j1, j2 = hash01(seed, i, 1) - 0.5, hash01(seed, i, 2) - 0.5

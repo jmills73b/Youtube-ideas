@@ -141,7 +141,7 @@ def _limb(ctx, pts, w, col, alpha):
 
 
 def soldier(ctx, x, y, h, phase, facing=1, color=(0.08, 0.09, 0.08), alpha=1.0, pack=True,
-            beret=False, lean=16.0, rifle=True, stride=1.0):
+            beret=False, lean=16.0, rifle=True, stride=1.0, helmet=None, bayonet=False, rifle_pose="port"):
     """Walking infantryman with bergen (the 'yomp'). y = ground level."""
     f = facing
     bob = -abs(math.sin(phase)) * 0.018 * h
@@ -195,13 +195,29 @@ def soldier(ctx, x, y, h, phase, facing=1, color=(0.08, 0.09, 0.08), alpha=1.0, 
     hand = arm(phase + math.pi, color)
     if rifle:
         ctx.set_line_width(0.028 * h)
-        ctx.move_to(hand[0] - f * 0.12 * h, hand[1] + 0.1 * h)
-        ctx.line_to(hand[0] + f * 0.2 * h, hand[1] - 0.14 * h)
+        if rifle_pose == "slope":      # carried at the slope / high port for the advance
+            r0 = (hand[0] - f * 0.05 * h, hand[1] + 0.12 * h)
+            r1 = (hand[0] + f * 0.12 * h, hand[1] - 0.3 * h)
+        else:
+            r0 = (hand[0] - f * 0.12 * h, hand[1] + 0.1 * h)
+            r1 = (hand[0] + f * 0.2 * h, hand[1] - 0.14 * h)
+        ctx.move_to(*r0)
+        ctx.line_to(*r1)
         set_rgba(ctx, color, alpha)
         ctx.stroke()
+        if bayonet:
+            dx, dy = r1[0] - r0[0], r1[1] - r0[1]
+            n = math.hypot(dx, dy) or 1
+            ctx.set_line_width(0.014 * h)
+            ctx.move_to(*r1)
+            ctx.line_to(r1[0] + dx / n * 0.14 * h, r1[1] + dy / n * 0.14 * h)
+            ctx.stroke()
     ctx.arc(head[0], head[1], 0.062 * h, 0, 6.283)
     set_rgba(ctx, color, alpha)
     ctx.fill()
+    if helmet:
+        _helmet(ctx, head, h, f, helmet, color, alpha)
+        return
     if beret:
         ctx.save()
         ctx.translate(head[0] - f * 0.02 * h, head[1] - 0.045 * h)
@@ -213,6 +229,47 @@ def soldier(ctx, x, y, h, phase, facing=1, color=(0.08, 0.09, 0.08), alpha=1.0, 
         ctx.close_path()
     set_rgba(ctx, color, alpha)
     ctx.fill()
+
+
+def _helmet(ctx, head, h, f, kind, color, alpha):
+    """Period headgear drawn over the head."""
+    hx, hy = head
+    set_rgba(ctx, color, alpha)
+    if kind == "brodie":        # British Mk I steel helmet: shallow bowl, wide flat brim
+        ctx.save()
+        ctx.translate(hx, hy - 0.03 * h)
+        ctx.rotate(-0.1 * f)
+        ctx.scale(0.108 * h, 0.018 * h)
+        ctx.arc(0, 0, 1, 0, 6.283)
+        ctx.restore()
+        ctx.fill()
+        ctx.save()
+        ctx.translate(hx, hy - 0.035 * h)
+        ctx.scale(1.0, 0.62)
+        ctx.arc(0, 0, 0.066 * h, math.pi, 2 * math.pi)
+        ctx.restore()
+        ctx.fill()
+    elif kind == "stahl":       # German M1916 Stahlhelm: deep crown, flared neck guard
+        ctx.move_to(hx + f * 0.075 * h, hy - 0.01 * h)
+        ctx.curve_to(hx + f * 0.08 * h, hy - 0.1 * h, hx - f * 0.07 * h, hy - 0.12 * h, hx - f * 0.08 * h,
+                     hy - 0.02 * h)
+        ctx.line_to(hx - f * 0.11 * h, hy + 0.035 * h)
+        ctx.line_to(hx - f * 0.05 * h, hy + 0.03 * h)
+        ctx.line_to(hx + f * 0.09 * h, hy + 0.0 * h)
+        ctx.close_path()
+        ctx.fill()
+    elif kind == "cap":         # 1914 service dress cap with peak
+        ctx.rectangle(hx - 0.07 * h, hy - 0.085 * h, 0.14 * h, 0.05 * h)
+        ctx.fill()
+        ctx.move_to(hx + f * 0.02 * h, hy - 0.04 * h)
+        ctx.line_to(hx + f * 0.11 * h, hy - 0.025 * h)
+        ctx.line_to(hx + f * 0.02 * h, hy - 0.02 * h)
+        ctx.close_path()
+        ctx.fill()
+    else:
+        ctx.arc(hx, hy - 0.01 * h, 0.08 * h, math.pi, 2 * math.pi)
+        ctx.close_path()
+        ctx.fill()
 
 
 def standing_figure(ctx, x, y, h, color, alpha=1.0, arm_up=0.0, t=0.0, seed=0, scarf=None, placard=None,

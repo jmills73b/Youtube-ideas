@@ -3,3 +3,5 @@ falklands/models/
 falklands/output/*_master.mp4
 __pycache__/
 *.pyc
+somme/build/
+somme/output/*_master.mp4
