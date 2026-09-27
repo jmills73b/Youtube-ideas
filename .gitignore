@@ -1,0 +1,5 @@
+falklands/build/
+falklands/models/
+falklands/output/*_master.mp4
+__pycache__/
+*.pyc
