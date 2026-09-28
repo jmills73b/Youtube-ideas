@@ -5,3 +5,5 @@ __pycache__/
 *.pyc
 somme/build/
 somme/output/*_master.mp4
+mincemeat/build/
+mincemeat/output/*_master.mp4
